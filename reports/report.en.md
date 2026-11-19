@@ -33,3 +33,17 @@ We compare two single-measurement rules (lowest `f_08` or lowest `f_12` first) w
 Each rule selects exactly 1,568 of the 15,680 validation observations. Ties are resolved using a common seeded shuffle of sorted IDs (seed 42), independent of the outcome. Of the 1,526 high readings, `f_08` alone caught 469 (30.73% recall), `f_12` alone caught 225 (14.74%), and the combined score caught **567 (37.16%)**. Combining the measurements recovered **98 additional high readings** over `f_08` at the same cost in rechecks.
 
 [Table 4: Baseline comparison](tables/baseline_comparison.csv) includes precision and lift. Of the rows selected by the combined rule, 36.16% were high readings, compared with 9.73% across validation: **3.72 times the expected yield of random selection**. The combined rule is the benchmark for subsequent classifiers. The final test set remains reserved for their evaluation.
+
+## 4. Predictive modeling
+
+We fit three classifiers to the 28 original input measurements. Logistic regression models an additive effect on the log-odds; we standardized its inputs using the mean and standard deviation fitted within each training fold. A decision tree can express thresholds and interactions without scaling. A random forest averages probabilities from 96 trees trained on bootstrap samples and considers a random subset of inputs at each split. The combined percentile score remains a separate reference rule.
+
+We used three shuffled, stratified folds within the training set (seed 42). For logistic regression we tested inverse regularization strength `C` of 0.01, 0.1, and 1. For the tree we crossed maximum depths of 4 and 8 with minimum leaf sizes of 20 and 100. For the forest we crossed minimum leaf sizes of 5 and 25 with two feature-sampling settings: the square root of the input count or half of the inputs. We chose one setting per classifier by mean recall among the top 10% of each held-out fold, then refitted it on the full training set. [Table 5: Parameter search](tables/classifier_tuning.csv) gives the mean and standard deviation across folds for every setting.
+
+For model selection we ranked validation rows by predicted probability of `f_09 > 16`, applying the same budget and tie-breaking policy as the baseline. The winner was fixed before scoring the final test set. [Table 6: Predictive comparison](tables/classifier_comparison.csv) records all methods on all three splits. Accuracy, sensitivity (recall), specificity, precision, lift, and confusion counts use the actual review decisions; ROC-AUC uses the full ranking. The training metrics are in-sample estimates.
+
+## 5. Predictive evaluation
+
+At 1,568 validation rechecks the forest caught 871 high readings, compared with 843 for logistic regression, 806 for the tree, and 567 for the baseline. The selected forest considered 14 of 28 inputs at each split and required at least 25 training observations per leaf.
+
+On the test set, 1,854 of 19,600 readings were high. With 1,960 rechecks, the forest caught **1,058**, compared with **703** for the baseline: **355 additional high readings at the same review cost**. The forest missed 796 high readings and sent 902 non-high readings for remeasurement. Its sensitivity was 57.07%, specificity 94.92%, accuracy 91.34%, and ROC-AUC 0.901. Its lower sensitivity on test than on training (67.64%) shows why the training result alone would overstate the expected yield.

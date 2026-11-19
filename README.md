@@ -58,3 +58,18 @@ It writes `reports/tables/feature_relevance.csv` from training data and
 `reports/tables/baseline_comparison.csv` from validation data. Each rule selects
 exactly 1,568 validation IDs for remeasurement; score ties use the same seeded
 shuffle of sorted IDs. The final test set is reserved for model evaluation.
+
+## Milestone 3: reproduce the classifier comparison
+
+```sh
+uv run --locked python -m latentra.prediction
+```
+
+The command tunes logistic regression, a decision tree and a random forest on
+the original training rows with three stratified folds. Validation selects the
+method; all tuned classifiers and the fixed baseline are then reported on test.
+`reports/tables/classifier_tuning.csv` contains the tried parameter settings and
+fold-averaged recall at the 10% budget. `classifier_comparison.csv` contains the
+train/validation/test metrics and confusion counts (`tn`, `fp`, `fn`, `tp`).
+The selection record and winning fitted classifier are saved locally under
+`artifacts/milestone-3/`.
