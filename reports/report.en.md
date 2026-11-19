@@ -12,7 +12,7 @@ Assume there is capacity to remeasure 10 out of every 100 observations. The deci
 
 The [competition data](https://www.kaggle.com/competitions/tabular-playground-series-jul-2022/data) contain 98,000 simulated manufacturing observations with unique row IDs. `data.csv` contains the measurements; `sample_submission.csv` is an output template, so there is no second observation table to join. Of the 29 anonymous measurements, seven (`f_07`–`f_13`) take integer values and 22 are continuous. Their units and physical meanings are unspecified.
 
-The analysis preserves the original exploratory split: permute the original row positions with NumPy `default_rng(42)`, then take 62,720 for training, 15,680 for validation, and 19,600 for the final test. All statistics and figures below use only the training rows. There are no missing training measurements or duplicate training measurement vectors. [Table 1: Attribute summary](tables/attribute_summary.csv) includes quartiles and counts beyond the 1.5-IQR fences. For example, 2,148 `f_09` readings fall outside those fences. They are retained: an extreme reading is precisely the kind of observation the predictive task is intended to capture.
+The analysis preserves the original exploratory split: permute the original row positions with NumPy `default_rng(42)`, then take 62,720 for training, 15,680 for validation, and 19,600 for the final test. All statistics and figures in this section use only the training rows. There are no missing training measurements or duplicate training measurement vectors. [Table 1: Attribute summary](tables/attribute_summary.csv) includes quartiles and counts beyond the 1.5-IQR fences. For example, 2,148 `f_09` readings fall outside those fences. They are retained: an extreme reading is precisely the kind of observation the predictive task is intended to capture.
 
 ![Pearson correlations among the 29 training measurements](figures/attribute_correlations.png)
 
@@ -21,3 +21,15 @@ The analysis preserves the original exploratory split: permute the original row 
 ![High-reading rate in four ranges of f_08](figures/f09_high_rate_by_f08.png)
 
 **Figure 2.** Overall, 6,106 training rows (9.74%) have `f_09 > 16`. Among rows with `f_08 ≤ 4`, the rate rises to 21.97% (20,828 rows); among those with `f_08 ≥ 10`, it falls to 2.03% (15,453 rows). The ranges use the training quartiles of `f_08`; ties at integer cutoffs make group sizes unequal. This roughly elevenfold difference supports testing `f_08` as a baseline for prioritization. It does not establish causation or identify a machine fault.
+
+## 3. Data preparation and reference rules
+
+The observed target is 1 when `f_09 > 16` and 0 otherwise, including at 16. We retain the other 28 measurements as inputs, with `id` as a row key. No training value required imputation. [Table 3: Feature relevance](tables/feature_relevance.csv) gives each input's training-set Spearman correlation with the binary outcome. The strongest individual relationships are negative: `f_08` (−0.287), `f_13` (−0.261), and `f_11` (−0.229). Weak individual correlations do not rule out useful joint effects, so we do not discard inputs on this basis.
+
+We compare two single-measurement rules (lowest `f_08` or lowest `f_12` first) with one derived score. For each measurement, its percentile is the fraction of training values less than or equal to the observed value. The combined score averages the two percentiles with equal weight. A low score gives priority to observations where both readings tend to be low. The training reference distribution stays fixed when scoring validation rows.
+
+### Validation at a fixed review budget
+
+Each rule selects exactly 1,568 of the 15,680 validation observations. Ties are resolved using a common seeded shuffle of sorted IDs (seed 42), independent of the outcome. Of the 1,526 high readings, `f_08` alone caught 469 (30.73% recall), `f_12` alone caught 225 (14.74%), and the combined score caught **567 (37.16%)**. Combining the measurements recovered **98 additional high readings** over `f_08` at the same cost in rechecks.
+
+[Table 4: Baseline comparison](tables/baseline_comparison.csv) includes precision and lift. Of the rows selected by the combined rule, 36.16% were high readings, compared with 9.73% across validation: **3.72 times the expected yield of random selection**. The combined rule is the benchmark for subsequent classifiers. The final test set remains reserved for their evaluation.

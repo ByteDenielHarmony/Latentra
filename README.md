@@ -45,3 +45,16 @@ to `reports/figures/`, and the ordered train/validation/test IDs to the local,
 Git-ignored `artifacts/milestone-1/split_ids.csv`. Use the original CSV order to
 reproduce the split. The [English report](reports/report.en.md) and its
 [Slovak translation](reports/report.sk.md) reference the same outputs.
+
+## Milestone 2: reproduce the review-budget baseline
+
+```sh
+uv run --locked python -m latentra.baseline
+uv run --locked python -m unittest discover -s tests
+```
+
+The first command reconstructs the same split (and verifies the saved IDs if present).
+It writes `reports/tables/feature_relevance.csv` from training data and
+`reports/tables/baseline_comparison.csv` from validation data. Each rule selects
+exactly 1,568 validation IDs for remeasurement; score ties use the same seeded
+shuffle of sorted IDs. The final test set is reserved for model evaluation.

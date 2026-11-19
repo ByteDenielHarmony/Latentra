@@ -26,3 +26,10 @@ def split_ids(index: pd.Index) -> pd.DataFrame:
         cfg.ROW_ID: index.take(order),
         "split": np.repeat(["train", "validation", "test"], sizes),
     })
+
+
+def prediction_inputs(rows: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+    """Keep the observed outcome separate from the measurements available at review time."""
+    if rows[cfg.TARGET].isna().any():
+        raise ValueError("A missing target measurement cannot label a high reading.")
+    return rows.loc[:, cfg.PREDICTORS], rows[cfg.TARGET].gt(cfg.HIGH_ABOVE).rename("high")
