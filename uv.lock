@@ -219,6 +219,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "scikit-learn" },
+    { name = "scipy" },
     { name = "threadpoolctl" },
 ]
 
@@ -230,6 +231,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.5.5" },
     { name = "pandas", specifier = ">=3.1.1" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
+    { name = "scipy", specifier = ">=1.18.1" },
     { name = "threadpoolctl", specifier = ">=3.8.0" },
 ]
 

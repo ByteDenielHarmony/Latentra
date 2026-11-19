@@ -51,3 +51,21 @@ V testovacej množine bolo z 19 600 hodnôt vysokých 1 854. Pri 1 960 premerani
 ![Počet zachytených vysokých hodnôt pri rovnakej kapacite na premeranie a kontingenčná tabuľka náhodného lesa](figures/classifier_comparison.png)
 
 **Obrázok 3.** Výsledky na testovacej množine pri 10 % kapacite na premeranie. Riadky matice predstavujú pozorované hodnoty a stĺpce rozhodnutia o premeraní.
+
+## Opisné modelovanie a vyhodnotenie: prevádzkové profily
+
+Všetkých 28 vstupných meraní sme štandardizovali pomocou priemerov a smerodajných odchýlok trénovacej množiny. Pre každý počet zhlukov od 2 do 10 sme natrénovali K-Means (päť inicializácií) a model gaussovskej zmesi s plnými kovariančnými maticami (GMM) na troch podvzorkách po 8 192 trénovacích pozorovaní (seed 42–44). Každý model priradil profil tým istým 15 680 validačným riadkom. Stabilitu vyjadruje priemerný párový upravený Randov index (ARI) medzi tromi priradeniami; oddelenie zhlukov hodnotí priemerný siluetový koeficient s euklidovskou vzdialenosťou na pevnej vzorke 1 800 validačných riadkov. Ani jedna štatistika nevyžaduje označenia riadiacich stavov.
+
+Vyžadovali sme konvergenciu a aspoň 1 % validačných riadkov v každej skupine pri všetkých troch opakovaniach. Z počtov zhlukov, ktoré za najlepšou prípustnou stabilitou zaostali najviac o 0,05, sme zvolili najmenší počet so siluetovým koeficientom najviac o 0,01 nižším než najlepšia zostávajúca hodnota. [Tabuľka 7: Porovnanie počtov zhlukov](tables/cluster_screen.csv) ukazuje, prečo sme pri K-Means vybrali **3 profily**: štyri boli o niečo stabilnejšie (0,787 oproti 0,768), no tri dosiahli porovnateľné oddelenie. Pre GMM sme vybrali **4 profily** (stabilita 0,575). Siluetové koeficienty boli nízke pri oboch výberoch (0,035 a 0,022): profily sa prekrývajú. Po natrénovaní na celej trénovacej množine bola zhoda medzi metódami podľa ARI 0,345. Pri 6,85 % validačných riadkov sa dve najvyššie pravdepodobnosti príslušnosti k profilom GMM líšili o menej ako 0,10.
+
+![Priemerné merania v profiloch K-Means](figures/cluster_profile_kmeans.png)
+![Priemerné merania v profiloch GMM](figures/cluster_profile_gmm.png)
+
+**Obrázok 4a–b.** Priemerné merania vo validačných profiloch v jednotkách trénovacej smerodajnej odchýlky. Obe tepelné mapy používajú rovnakú farebnú škálu. Identifikátory profilov platia len v rámci danej metódy.
+
+Atribút `f_09` sme preskúmali až po výbere modelov. Obe metódy našli profil so zvýšenými hodnotami `f_10` a nízkymi hodnotami `f_11`: profil 1 pri K-Means obsahoval 1 044 vysokých hodnôt zo 4 589 riadkov (22,75 %); profil 0 pri GMM obsahoval 1 046 zo 4 054 (25,80 %). Naopak, profil 3 pri GMM sa vyznačoval zvýšenými hodnotami `f_12` a `f_13` a obsahoval iba 58 vysokých hodnôt z 3 374 (1,72 %). [Tabuľka 8: Súhrn profilov](tables/cluster_profiles.csv) uvádza počty a tri najvýraznejšie merania pre každú skupinu. Podobnosť profilov s vysokým podielom vysokých meraní je užitočnejšia na interpretáciu než predpoklad, že dva ľubovoľné identifikátory zhlukov označujú rovnaký výrobný stav.
+
+![Priradenia K-Means v troch hlavných komponentoch](figures/pca_cluster_kmeans.png)
+![Priradenia GMM pre tie isté body](figures/pca_cluster_gmm.png)
+
+**Obrázok 5a–b.** Každý obrázok zobrazuje rovnakých 2 200 validačných riadkov v dvoch projekciách. Ľavý panel používa PC1 a PC2 (10,49 % rozptylu trénovacích dát); pravý pridáva PC3 (spolu 15,17 %). V každej dvojici panelov označuje rovnaká farba rovnaký profil. Väčšinu variability nezachytáva ani jedna projekcia.

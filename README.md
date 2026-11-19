@@ -84,3 +84,23 @@ uv run --locked python -m latentra.prediction_viewer
 ```
 
 Append `--no-show` to either command for export without a window.
+
+## Milestone 4: operating profiles
+
+```sh
+uv run --locked python -m latentra.clustering
+uv run --locked python -m latentra.cluster_viewer
+```
+
+The first command screens K-Means and Gaussian mixtures for 2–10 profiles,
+refits the selected models, exports report tables and figures, and opens the
+viewer. The second reopens the saved comparison without refitting. Use left/right
+arrows or Previous/Next to switch methods in both panels; the 2D PC1–PC2 plot
+and rotatable 3D plot show the same points with the same colors. Both commands accept
+`--no-show` for headless figure export.
+
+`reports/tables/cluster_screen.csv` records resampling diagnostics, and
+`cluster_profiles.csv` describes the final validation groups. Local models, the
+scaler, PCA, variance ratios and ID-keyed validation assignments are under
+`artifacts/milestone-4/`. The viewer discovers `cluster_*` assignment columns
+in `validation.csv`; IDs in the legend belong to the indicated method.

@@ -51,3 +51,21 @@ On the test set, 1,854 of 19,600 readings were high. With 1,960 rechecks, the fo
 ![High readings caught at the same test review budget, with the forest confusion matrix](figures/classifier_comparison.png)
 
 **Figure 3.** Test outcomes at the 10% review budget. The matrix separates observed readings (rows) from remeasurement decisions (columns).
+
+## Descriptive modeling and evaluation: operating profiles
+
+We standardized the 28 input measurements using training means and standard deviations. For each count from 2 to 10, we fitted K-Means (five initializations) and a full-covariance Gaussian mixture (GMM) on three training subsamples of 8,192 observations, using seeds 42–44. Each fit assigned the same 15,680 validation rows. Stability is the mean pairwise adjusted Rand index (ARI) across the three assignments; separation is the mean Euclidean silhouette on a fixed sample of 1,800 validation rows. Neither statistic requires control-state labels.
+
+We required convergence and at least 1% of validation rows in each group across all three fits. Among counts within 0.05 of the best eligible stability, we selected the smallest count within 0.01 of the best remaining silhouette. [Table 7: Cluster-count comparison](tables/cluster_screen.csv) shows why K-Means selected **3 profiles**: four were slightly more stable (0.787 vs. 0.768), but three gave comparable separation. The GMM selected **4 profiles** (stability 0.575). Silhouettes were low for both selections (0.035 and 0.022): the profiles overlap. After refitting on all training rows, agreement between methods was ARI 0.345. For 6.85% of validation rows the two highest GMM membership probabilities differed by less than 0.10.
+
+![K-Means profile means](figures/cluster_profile_kmeans.png)
+![GMM profile means](figures/cluster_profile_gmm.png)
+
+**Figure 4a–b.** Mean measurements in each validation profile, expressed in training standard deviations. Both heatmaps use the same color scale. Profile IDs are local to each method.
+
+Only after selection did we inspect `f_09`. Both methods identified a profile with elevated `f_10` and low `f_11`: K-Means profile 1 had 1,044 high readings among 4,589 rows (22.75%); GMM profile 0 had 1,046 among 4,054 (25.80%). By contrast, GMM profile 3 showed elevated `f_12` and `f_13` and only 58 high readings among 3,374 (1.72%). [Table 8: Profile summaries](tables/cluster_profiles.csv) gives the counts and three most distinctive measurements for every group. The similar high-rate pattern is more interpretable than assuming that two arbitrary cluster IDs denote the same manufacturing state.
+
+![K-Means assignments on three principal components](figures/pca_cluster_kmeans.png)
+![GMM assignments on the same points](figures/pca_cluster_gmm.png)
+
+**Figure 5a–b.** Each figure shows the same 2,200 validation rows in two views. The left panel uses PC1 and PC2 (10.49% of training variance); the right adds PC3 (15.17% together). Colors identify the same profile within each pair of panels. Most variation lies outside both projections.
