@@ -104,3 +104,23 @@ and rotatable 3D plot show the same points with the same colors. Both commands a
 scaler, PCA, variance ratios and ID-keyed validation assignments are under
 `artifacts/milestone-4/`. The viewer discovers `cluster_*` assignment columns
 in `validation.csv`; IDs in the legend belong to the indicated method.
+
+## Milestone 5: consensus and surrogate fidelity
+
+With the Milestone 4 artifacts present, run:
+
+```sh
+uv run --locked python -m latentra.consensus --no-show
+```
+
+This fits a four-cluster K-Means voter, matches its IDs to the saved GMM on
+training rows, and evaluates a five-outcome decision tree against their votes.
+`reports/tables/consensus_*.csv` and `surrogate_*.csv` contain the training overlap,
+coverage by GMM profile, tuning, fidelity, confusion counts (`-1` = uncertain),
+and batch timings. Timings depend on the machine. The voter models, training
+alignment, surrogate, and validation votes are saved in `artifacts/milestone-5/`.
+
+Omit `--no-show` to open the linked 2D/3D plots after the run, or reopen with
+`uv run --locked python -m latentra.cluster_viewer`. The four views are the
+original K-Means, GMM, aligned four-cluster K-Means voter, and consensus.
+Gray crosses mean disagreement; the coverage in the title uses all validation rows.

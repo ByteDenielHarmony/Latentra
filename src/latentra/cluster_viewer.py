@@ -4,6 +4,7 @@ import argparse
 import json
 
 import matplotlib
+import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 from matplotlib.widgets import Button
@@ -29,6 +30,11 @@ class ClusterView:
         self.fig = fig
         self.methods = [col for col in points if col.startswith("cluster_")]
         self.slots = {col: color_slots(points[col], points[self.methods[0]]) for col in self.methods}
+        # Voter and consensus IDs already use the training-aligned GMM namespace.
+        for col in ("cluster_kmeans4", "cluster_consensus"):
+            if col in self.methods:
+                self.slots[col] = self.slots["cluster_gmm"]
+        self.coverage = (points.cluster_consensus != -1).mean() if "cluster_consensus" in points else None
         self.points = points.sample(n=min(2200, len(points)), random_state=cfg.SEED)
         self.plane = fig.add_subplot(121)
         self.ax = fig.add_subplot(122, projection="3d")
@@ -40,6 +46,12 @@ class ClusterView:
         self.ax.set_title("3D · PC1–PC3")
         self.scatter = self.ax.scatter(*[self.points[f"PC{i}"] for i in (1, 2, 3)],
                                        s=8, alpha=.75, depthshade=False, edgecolors="none")
+        self.crosses = []
+        if self.coverage is not None:
+            tied = self.points[self.points.cluster_consensus == -1]
+            style = dict(marker="x", c="#888888", s=12, linewidths=.7)
+            self.crosses = [self.plane.scatter(tied.PC1, tied.PC2, **style),
+                            self.ax.scatter(tied.PC1, tied.PC2, tied.PC3, depthshade=False, **style)]
         for i, axis in enumerate([self.ax.set_xlabel, self.ax.set_ylabel, self.ax.set_zlabel]):
             axis(f"PC{i + 1} ({variance[i]:.1%})")
         self.index = 0
@@ -54,15 +66,26 @@ class ClusterView:
         palette = list(matplotlib.colormaps["tab10"].colors)
         palette[2] = "#333333"
         colors = {label: palette[slot % len(palette)] for label, slot in slots.items()}
-        if -1 in self.points[method].values:
-            colors[-1] = "gray"
+        consensus = method == "cluster_consensus"
+        if consensus:
+            colors[-1] = "#888888"
+        for artist in self.crosses:
+            artist.set_visible(consensus)
+        sizes = np.where(self.points[method] == -1, 0, 8) if consensus else [8]
+        self.flat.set_sizes(sizes)
+        self.scatter.set_sizes(sizes)
         facecolors = [colors[label] for label in self.points[method]]
         self.flat.set_facecolor(facecolors)
         self.scatter.set_facecolor(facecolors)
-        name = method.removeprefix("cluster_").upper()
-        self.fig.suptitle(f"{name} · {len(slots)} profiles · n = {len(self.points):,}")
-        handles = [Line2D([], [], linestyle="", marker="o", color=color,
-                          label=f"{name} {label}" if label != -1 else "Tie")
+        name = {"cluster_kmeans": "K-Means", "cluster_gmm": "GMM",
+                "cluster_kmeans4": "K-Means (ensemble voter)", "cluster_consensus": "Consensus"
+                }.get(method, method.removeprefix("cluster_").upper())
+        title = f"{name} · {len(slots)} profiles · n = {len(self.points):,}"
+        if consensus:
+            title += f" · full validation coverage {self.coverage:.1%}"
+        self.fig.suptitle(title)
+        handles = [Line2D([], [], linestyle="", marker="x" if label == -1 else "o", color=color,
+                          label=f"Profile {label}" if label != -1 else "Uncertain")
                    for label, color in colors.items()]
         self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1.05, .5))
         self.fig.canvas.draw_idle()
@@ -88,6 +111,12 @@ def view_results(*, show=True):
     if not (artifacts / "summary.json").exists():
         raise SystemExit("Run `uv run python -m latentra.clustering` first.")
     points = pd.read_csv(artifacts / "validation.csv", index_col=cfg.ROW_ID)
+    extra = cfg.ROOT / "artifacts/milestone-5/validation_votes.csv"
+    if extra.is_file():
+        votes = pd.read_csv(extra, index_col=cfg.ROW_ID).reindex(points.index)
+        if not votes.reference_gmm.equals(points.cluster_gmm):
+            raise ValueError("Saved consensus votes do not match this projection; rerun latentra.consensus.")
+        points = points.join(votes.drop(columns="reference_gmm"), validate="one_to_one")
     variance = json.loads((artifacts / "summary.json").read_text())["variance"]
     fig = plt.figure(figsize=(12, 5.8))
     view = ClusterView(fig, points, variance)

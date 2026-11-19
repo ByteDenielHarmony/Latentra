@@ -69,3 +69,17 @@ Only after selection did we inspect `f_09`. Both methods identified a profile wi
 ![GMM assignments on the same points](figures/pca_cluster_gmm.png)
 
 **Figure 5a–b.** Each figure shows the same 2,200 validation rows in two views. The left panel uses PC1 and PC2 (10.49% of training variance); the right adds PC3 (15.17% together). Colors identify the same profile within each pair of panels. Most variation lies outside both projections.
+
+## Consensus profiles and the cost of approximating them
+
+We paired the four-component GMM with a four-cluster K-Means voter: four clusters had comparable stability to the original three-cluster solution. The [training overlap table](tables/consensus_overlap.csv) gives the one-to-one match that maximizes shared memberships. Before validation we fixed the mapping from K-Means IDs 0, 1, 2, 3 to GMM IDs 1, 2, 3, 0. Equal votes yield a profile only when the voters agree; otherwise the outcome is *uncertain*. Both voters and the surrogate used the same 28 inputs, excluding `f_09`.
+
+The voters agreed on 11,628 of 15,680 validation rows (74.16%) and 14,293 of 19,600 test rows (72.92%). [Coverage by profile](tables/consensus_coverage.csv) shows that agreement was uneven: on test it ranged from 62.50% for rows assigned GMM profile 1 to 83.62% for GMM profile 2. These are measures of agreement between methods; true operating-state labels are unavailable.
+
+![Consensus views; disputed observations are gray crosses](figures/pca_cluster_consensus.png)
+
+**Figure 6.** The validation sample from Figure 5. Colors follow the GMM IDs, and gray crosses mark disagreements. The title reports coverage on the full validation set.
+
+We trained a decision tree on all five training vote outcomes, including uncertain. [Validation macro-F1](tables/surrogate_tuning.csv), giving each outcome equal weight, selected a maximum depth of 12 and at least 20 rows per leaf. On test, the tree reproduced 74.09% of the ensemble decisions (macro-F1 0.756); aligned K-Means alone reproduced 72.92% (macro-F1 0.671). K-Means always assigned a profile. The tree recognized 59.07% of the disputed cases, assigning a profile to the remaining 40.93%. See the [fidelity measures](tables/surrogate_fidelity.csv) and [five-outcome confusion matrices](tables/surrogate_confusion.csv) (rows: ensemble, columns: prediction).
+
+In a [single-thread benchmark](tables/consensus_timing.csv) on the same 19,600-row batch, median inference took 12.92 ms for the ensemble, 2.30 ms for aligned K-Means, and 2.36 ms for the tree (one warm-up, nine timed runs, required preprocessing included). The tree was about 5.5 times faster than the ensemble on this machine. Saving about 11 ms per batch does not justify replacing the ensemble for this work: the tree too often gives a definite profile where the voters disagree.

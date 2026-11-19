@@ -69,3 +69,17 @@ Atribút `f_09` sme preskúmali až po výbere modelov. Obe metódy našli profi
 ![Priradenia GMM pre tie isté body](figures/pca_cluster_gmm.png)
 
 **Obrázok 5a–b.** Každý obrázok zobrazuje rovnakých 2 200 validačných riadkov v dvoch projekciách. Ľavý panel používa PC1 a PC2 (10,49 % rozptylu trénovacích dát); pravý pridáva PC3 (spolu 15,17 %). V každej dvojici panelov označuje rovnaká farba rovnaký profil. Väčšinu variability nezachytáva ani jedna projekcia.
+
+## Konsenzuálne profily a náklady na ich aproximáciu
+
+Štvorzložkový GMM sme spojili s metódou K-Means so štyrmi zhlukmi: stabilita štyroch zhlukov bola porovnateľná s pôvodným riešením s tromi zhlukmi. [Tabuľka prekryvu na trénovacích dátach](tables/consensus_overlap.csv) ukazuje vzájomne jednoznačné priradenie, ktoré maximalizuje počet spoločných zaradení. Pred validáciou sme identifikátorom K-Means 0, 1, 2, 3 pevne priradili identifikátory GMM 1, 2, 3, 0. Oba hlasy majú rovnakú váhu: profil priradíme iba pri zhode, inak je výsledok *neistý*. Obe hlasujúce metódy aj náhradný model použili rovnakých 28 vstupov bez `f_09`.
+
+Metódy sa zhodli na 11 628 z 15 680 validačných riadkov (74,16 %) a na 14 293 z 19 600 testovacích riadkov (72,92 %). [Pokrytie podľa profilu](tables/consensus_coverage.csv) ukazuje, že zhoda nebola rovnomerná: na testovacej množine sa pohybovala od 62,50 % pri riadkoch s profilom GMM 1 po 83,62 % pri profile GMM 2. Tieto hodnoty vyjadrujú zhodu metód; skutočné označenia prevádzkových stavov nemáme k dispozícii.
+
+![Konsenzuálne priradenia; sivé krížiky označujú prípady nezhody](figures/pca_cluster_consensus.png)
+
+**Obrázok 6.** Validačná vzorka z obrázka 5. Farby zodpovedajú identifikátorom GMM a sivé krížiky označujú nezhody. Nadpis uvádza pokrytie celej validačnej množiny.
+
+Rozhodovací strom sme natrénovali na všetkých piatich výsledkoch hlasovania vrátane neistého výsledku. Podľa [validačného makro-F1](tables/surrogate_tuning.csv), ktoré dáva každému výsledku rovnakú váhu, sme zvolili maximálnu hĺbku 12 a aspoň 20 riadkov v liste. Na testovacích dátach strom zopakoval 74,09 % rozhodnutí dvojice metód (makro-F1 0,756); samotný K-Means po zosúladení identifikátorov zopakoval 72,92 % (makro-F1 0,671). K-Means vždy priradil profil. Strom rozpoznal 59,07 % prípadov nezhody a zvyšným 40,93 % priradil profil. Podrobnosti uvádzajú [miery zhody](tables/surrogate_fidelity.csv) a [kontingenčné tabuľky pre päť výsledkov](tables/surrogate_confusion.csv) (riadky: hlasovanie, stĺpce: predikcia).
+
+Pri [jednovláknovom meraní](tables/consensus_timing.csv) na tej istej dávke 19 600 riadkov bol medián času predikcie 12,92 ms pre dvojicu metód, 2,30 ms pre zosúladený K-Means a 2,36 ms pre strom (jeden zahrievací a deväť meraných behov vrátane potrebného predspracovania). Strom bol na tomto počítači približne 5,5-krát rýchlejší než dvojica metód. Úspora približne 11 ms na dávku v tejto práci neodôvodňuje nahradenie hlasovania: strom príliš často priradí konkrétny profil tam, kde sa metódy nezhodnú.
