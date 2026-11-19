@@ -221,3 +221,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Competition data and Kaggle credentials
+/data/
+/artifacts/
+.kaggle/
+kaggle.json
