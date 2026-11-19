@@ -73,3 +73,14 @@ fold-averaged recall at the 10% budget. `classifier_comparison.csv` contains the
 train/validation/test metrics and confusion counts (`tn`, `fp`, `fn`, `tp`).
 The selection record and winning fitted classifier are saved locally under
 `artifacts/milestone-3/`.
+
+After saving the results, training exports `reports/figures/classifier_comparison.png`
+and opens a Matplotlib window on graphical desktops. Switch between Train,
+Validation and Test with the buttons; click a method's bar to inspect its
+confusion matrix. To reopen the viewer using the saved CSV:
+
+```sh
+uv run --locked python -m latentra.prediction_viewer
+```
+
+Append `--no-show` to either command for export without a window.

@@ -1,5 +1,6 @@
 """Tune, select, and evaluate fixed-budget classifiers for high readings."""
 
+import argparse
 import json
 
 import joblib
@@ -57,7 +58,7 @@ def metrics(risk, y):
                 roc_auc=roc_auc_score(y, risk.loc[y.index]))
 
 
-def main():
+def main(*, show=True):
     frame = load_measurements()
     membership = split_ids(frame.index)
     if cfg.SPLIT_FILE.exists() and not pd.read_csv(cfg.SPLIT_FILE).equals(membership):
@@ -108,7 +109,12 @@ def main():
     results.to_csv(tables / "classifier_comparison.csv", index=False)
     print(results[["split", "model", "rechecks", "tp", "recall", "roc_auc"]].to_string(index=False))
     print(f"Selected on validation: {winner}")
+    from .prediction_viewer import view_results
+
+    view_results(show=show)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--no-show", action="store_true", help="export the comparison without opening a window")
+    main(show=not parser.parse_args().no_show)

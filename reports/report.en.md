@@ -47,3 +47,7 @@ For model selection we ranked validation rows by predicted probability of `f_09 
 At 1,568 validation rechecks the forest caught 871 high readings, compared with 843 for logistic regression, 806 for the tree, and 567 for the baseline. The selected forest considered 14 of 28 inputs at each split and required at least 25 training observations per leaf.
 
 On the test set, 1,854 of 19,600 readings were high. With 1,960 rechecks, the forest caught **1,058**, compared with **703** for the baseline: **355 additional high readings at the same review cost**. The forest missed 796 high readings and sent 902 non-high readings for remeasurement. Its sensitivity was 57.07%, specificity 94.92%, accuracy 91.34%, and ROC-AUC 0.901. Its lower sensitivity on test than on training (67.64%) shows why the training result alone would overstate the expected yield.
+
+![High readings caught at the same test review budget, with the forest confusion matrix](figures/classifier_comparison.png)
+
+**Figure 3.** Test outcomes at the 10% review budget. The matrix separates observed readings (rows) from remeasurement decisions (columns).

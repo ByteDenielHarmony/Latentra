@@ -47,3 +47,7 @@ Pri výbere modelu sme validačné riadky zoradili podľa odhadnutej pravdepodob
 Pri 1 568 premeraniach vo validačnej množine náhodný les zachytil 871 vysokých hodnôt, logistická regresia 843, strom 806 a referenčné pravidlo 567. Vybraný les pri každom vetvení posudzoval 14 z 28 vstupov a vyžadoval aspoň 25 trénovacích pozorovaní v liste.
 
 V testovacej množine bolo z 19 600 hodnôt vysokých 1 854. Pri 1 960 premeraniach náhodný les zachytil **1 058** vysokých hodnôt, kým referenčné pravidlo zachytilo **703**: **o 355 viac pri rovnakých nákladoch na premeranie**. Les nezachytil 796 vysokých hodnôt a na premeranie vybral 902 hodnôt, ktoré neboli vysoké. Senzitivita bola 57,07 %, špecificita 94,92 %, celková presnosť 91,34 % a ROC-AUC 0,901. Nižšia senzitivita na testovacej množine než na trénovacej (67,64 %) ukazuje, že samotný trénovací výsledok by nadhodnotil očakávaný počet zachytených prípadov.
+
+![Počet zachytených vysokých hodnôt pri rovnakej kapacite na premeranie a kontingenčná tabuľka náhodného lesa](figures/classifier_comparison.png)
+
+**Obrázok 3.** Výsledky na testovacej množine pri 10 % kapacite na premeranie. Riadky matice predstavujú pozorované hodnoty a stĺpce rozhodnutia o premeraní.
